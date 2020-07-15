@@ -12,13 +12,11 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
 
 ARG NACOS_VERSION=1.3.0
 
-WORKDIR /$BASE_DIR
+ADD nacos-server-${NACOS_VERSION}.tar.gz /home
 
-RUN apk add --no-cache  openjdk8-jre wget \
-&& wget  https://github.com/alibaba/nacos/releases/download/${NACOS_VERSION}/nacos-server-${NACOS_VERSION}.tar.gz -P /home \
+RUN apk add --no-cache  openjdk8-jre \
 && tar -xzvf /home/nacos-server-${NACOS_VERSION}.tar.gz -C /home \
-&& rm -rf /home/nacos-server-${NACOS_VERSION}.tar.gz /home/nacos/bin/* /home/nacos/conf/*.properties /home/nacos/conf/*.example /home/nacos/conf/nacos-mysql.sql \
-&& apk del wget
+&& rm -rf /home/nacos-server-${NACOS_VERSION}.tar.gz /home/nacos/bin/* /home/nacos/conf/*.properties /home/nacos/conf/*.example /home/nacos/conf/nacos-mysql.sql
 # set environment
 ENV MODE="cluster" \
     PREFER_HOST_MODE="ip"\
@@ -37,11 +35,11 @@ ENV MODE="cluster" \
     NACOS_DEBUG="n" \
     TOMCAT_ACCESSLOG_ENABLED="false"
 
+WORKDIR /$BASE_DIR
 
 ADD bin/docker-startup.sh bin/docker-startup.sh
 ADD conf/application.properties conf/application.properties
 ADD init.d/custom.properties init.d/custom.properties
-
 
 # set startup log dir
 RUN mkdir -p logs \
