@@ -1,6 +1,24 @@
-FROM centos:7.5.1804
-MAINTAINER pader "huangmnlove@163.com"
+FROM alpine:3.11.2
+MAINTAINER skymyyang yang-li@live.cn
 
+ENV LANG=C.UTF-8 \
+    TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
+&& echo $TZ > /etc/timezone \
+&& sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+&& apk update \
+&& apk add --update procps \
+&& apk add --no-cache  ca-certificates ttf-dejavu tzdata tini bash
+
+ARG NACOS_VERSION=1.3.0
+
+WORKDIR /$BASE_DIR
+
+RUN apk add --no-cache  openjdk8-jre wget \
+&& wget  https://github.com/alibaba/nacos/releases/download/${NACOS_VERSION}/nacos-server-${NACOS_VERSION}.tar.gz -P /home \
+&& tar -xzvf /home/nacos-server-${NACOS_VERSION}.tar.gz -C /home \
+&& rm -rf /home/nacos-server-${NACOS_VERSION}.tar.gz /home/nacos/bin/* /home/nacos/conf/*.properties /home/nacos/conf/*.example /home/nacos/conf/nacos-mysql.sql \
+&& apk del wget
 # set environment
 ENV MODE="cluster" \
     PREFER_HOST_MODE="ip"\
@@ -17,24 +35,7 @@ ENV MODE="cluster" \
     JVM_MS="128m" \
     JVM_MMS="320m" \
     NACOS_DEBUG="n" \
-    TOMCAT_ACCESSLOG_ENABLED="false" \
-    TIME_ZONE="Asia/Shanghai"
-
-ARG NACOS_VERSION=1.3.0
-
-WORKDIR /$BASE_DIR
-
-RUN set -x \
-    && yum update -y \
-    && yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel wget iputils nc  vim libcurl\
-    && wget  https://github.com/alibaba/nacos/releases/download/${NACOS_VERSION}/nacos-server-${NACOS_VERSION}.tar.gz -P /home \
-    && tar -xzvf /home/nacos-server-${NACOS_VERSION}.tar.gz -C /home \
-    && rm -rf /home/nacos-server-${NACOS_VERSION}.tar.gz /home/nacos/bin/* /home/nacos/conf/*.properties /home/nacos/conf/*.example /home/nacos/conf/nacos-mysql.sql \
-    && yum autoremove -y wget \
-    && ln -snf /usr/share/zoneinfo/$TIME_ZONE /etc/localtime && echo $TIME_ZONE > /etc/timezone \
-    && yum clean all
-
-
+    TOMCAT_ACCESSLOG_ENABLED="false"
 
 
 ADD bin/docker-startup.sh bin/docker-startup.sh
@@ -48,7 +49,8 @@ RUN mkdir -p logs \
 	&& touch start.out \
 	&& ln -sf /dev/stdout start.out \
 	&& ln -sf /dev/stderr start.out
-RUN chmod +x bin/docker-startup.sh
+RUN chmod +x bin/docker-startup.sh \
+&& rm -rf /var/cache/apk/*
 
 EXPOSE 8848
 ENTRYPOINT ["bin/docker-startup.sh"]
