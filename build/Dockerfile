@@ -12,10 +12,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
 
 ARG NACOS_VERSION=1.3.0
 
-ADD nacos-server-${NACOS_VERSION}.tar.gz /home
+COPY nacos-server-${NACOS_VERSION}.tar.gz /home
 
 RUN apk add --no-cache  openjdk8-jre \
-&& tar -xzvf /home/nacos-server-${NACOS_VERSION}.tar.gz -C /home \
 && rm -rf /home/nacos-server-${NACOS_VERSION}.tar.gz /home/nacos/bin/* /home/nacos/conf/*.properties /home/nacos/conf/*.example /home/nacos/conf/nacos-mysql.sql
 # set environment
 ENV MODE="cluster" \
